@@ -1,5 +1,13 @@
 # youBot: Installation from Scratch
 
+This tutorial describes how to setup youBot on an external PC.
+## Requirements
+
+The following should be installed before starting with this tutorial.
+
+* Ubuntu
+* ROS (Robot Operating System)
+
 # Create a workspace
 
 For our tutorial, we will create a workspace called **youbot_from_scratch**.
