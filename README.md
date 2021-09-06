@@ -1,148 +1,139 @@
-# youBot: Installation from Scratch
+# youBot_from_scratch
 
-This tutorial describes how to setup youBot on an external PC.
-## Requirements
+This repository contains the required files and description of the process to perform autonomous navigation using a KUKA youBot, controlled via an external PC/Laptop. This work was performed at RoboCup@Work Lab in Hochschule Bonn-Rhein-Sieg. 
 
-The following should be installed before starting with this tutorial.
+## Pre-requisites
 
-* Ubuntu
-* ROS (Robot Operating System)
+* A KUKA youBot
 
-# Create a workspace
+* A Laptop with Ubuntu v18.04 and ROS Melodic Morenia
 
-For our tutorial, we will create a workspace called **youbot_from_scratch**.
+## Steps to follow
+
+* First create a workspace, we call it `youBot_from_scratch` and then build it.
 
 ```
-mkdir youbot_from_scratch
+mkdir youBot_from_scratch
 cd youbot_from_scratch
 mkdir src
 catkin build
+cd src
 ```
 
-# youBot drivers
+* Inside `src`, we now need to clone the following packages:
 
-## Installation
+  - youbot_driver: `git clone https://github.com/youbot/youbot_driver.git`
+  
+  - youbot_description: `git clone https://github.com/youbot/youbot_description.git`
+  
+  - youbot_driver_ros_interface: `git clone https://github.com/youbot/youbot_driver_ros_interface.git`
+  
+  - youbot_applications: `git clone https://github.com/youbot/youbot_applications.git`
+ 
 
-Go to [youBot Github page](https://github.com/youbot) and clone the **youbot_driver** repository into the src folder of the youbot_from_scratch workspace.
+### Configuring KUKA youBot drivers
 
-```
-cd youbot_from_scratch
-git clone <link>
-```
-## Build the package
+* Now, we'll install the youBot drivers and test-run the youBot:
 
-```
-cd youbot_driver
-mkdir build
-cd build
-cmake ..
-make
-```
-In order to find the location of the package, we will give it's location in the bashrc.
+  - Build the youbot_driver package:
+  
+  ```
+  cd youbot_driver
+  mkdir build
+  cd build
+  cmake ..
+  make
+  ```
+  
+  - We need to edit some configuration files in `youbot_driver` package: 
+  
+    - Connect the ethernet cable from KUKA youBot to your Laptop
+    
+    - Check your PC's Ethernet device ID using `ifconfig` (It is usually something like eth0).
+    
+    - Go to `config` folder inside `youbot_driver` package, and open `youbot-ethercat.cfg` in edit-mode and change`EthernetDevice = <Your Ethernet Device ID>`
+  
+  - Now, navigate to the youbot_application package and build it using:
+  
+  ```
+  cd youbot_applications
+  mkdir build
+  cd build
+  cmake ..
+  make
+  ```
+  
+  - Export the respective package paths so that it can be discovered by other packages in ROS:
+  
+  ```
+  echo "export ROS_PACKAGE_PATH=\$ROS_PACKAGE_PATH:/home/<user>/youBot_from_scratch/src/youbot_driver:\
+  /home/<user>/youBot_from_scratch/src/youbot_applications" >> ~/.bashrc
+  ```
+  
+  > Note: Change the <user> tag to your default system user and change the workspace name if different.
+  
+  - Now we'll check if the drivers are installed successfully by running a demo script.
+    
+    ```
+    cd youbot_applications/hello_world_demo/bin
+    sudo ./<name_of_binary_file>
+    ```
 
-```
-gedit ~/.bashrc
-export YOUBOTDIR = ~/youbot_from_scratch/src/youbot_driver
-```
+### Configuring Hokuyo Lidar Sensor
 
-# Ethernet port
+* Now, we'll integrate the Hokuyo Lidar Sensor with the external laptop:
 
-We will set the name of our ethernet port in the configuration file of the youbot_driver
+  > Note: Since we are using an external laptop instead of KUKA youBot's internal PC, we need to connect the Hokuyo Lidar sensors to the USB port of the laptop. 
 
-To check the name of our ethernet port, type in the terminal:
-
-```
-ifconfig
-```
-
-Now, go to the **youbot_ethercat.cfg** file that is present in the **config** folder of the **youbot_driver**
-package.
-
-```
-cd youbot_driver/config
-vim youbot_ethercat.cfg
--> EthernetDevice = <name_of_the_port> 
-```
-
-# youBot applications
-
-## Installation
-
-To check whether the drivers are installed properly, we will install **youbot_applications** package from [youBot Github page](https://github.com/youbot) in the src folder of the youbot_from_scratch workspace and try to run the **hello_world** application.
-
-```
-cd youbot_from_scratch
-git clone <link>
-```
-
-## Build the package
-```
-cd youbot_applications
-mkdir build
-cd build
-cmake ..
-make
-```
-Also, export the ROS_PACKAGE_PATH in the bashrc:
-
-```
-gedit ~/.bashrc
--> export ROS_PACKAGE_PATH = ${ROS_PACKAGE_PATH}:<path_to_driver_folder>/youbot_driver:<path_to_applications_folder>/youbot_applications
-source ~/.bashrc
-```
-
-## Run the application
-
-To run the hello_world demo application, we have to run the binary file
-
-```
-cd youbot_applications/<name_of_the_application>/bin
-sudo ./<name_of_the_binary>
-```
-
-# Configure the sensors
-
-As in our case, we are using our laptop to configure the youBot instead of using the internal PC, we have to connect the sensors to the USB port of our laptop.
-
-To check if the sensor is showing up, type the following command in the terminal:
-
-```
-dmesg
-```
-Now, check the port to which the sensor is connected to. In our case, its name was: **ttyACM0**.
-
-Check if the following command works
-
-```
-od /dev/<port_name>
-```
-if not check
-
-```
-sudo od /dev/<port_name>
-```
-if it works add yourself to the dialout group and resatrt your system
-
-```
-sudo adduser <YOUR_USERNAME> dialout
-groups   (check if your username appears)
-```
-
-## Write rules for the sensor
-
-We will first find the ID of the sensor
-
-```
-rosrun urg_node getID /dev/<port_name>
-```
-
-**NOTE:** This ID keeps on changing, so we will update the rules to get a consistent ID.
-
-```
-cd ./etc/udev/rules.d
-sudo vim <name_of_the_rule>
-```
-copy rules from the roswiki page of urg_node (change the version according to your machine)
-
-
-
+  - Connect the sensor to the Laptop and check if the sensor is found by typing `dmesg` in a terminal window. Keep a note of its port ID (something like ttyACM0)
+  
+  - Check if you have the rights to open the port:
+  
+  ```
+  od /dev/<port ID>
+  ```
+  
+    - If it doesn't work, try it with super user permission:
+    
+    ```
+    sudo  od /dev/<port ID>
+    ```
+    
+    - if it works with super user permission, then add yourself to the dialout group:
+    
+    ```
+    sudo adduser <YOUR_USERNAME> dialout
+    ```
+    
+    - Log out and log back in. Check if you're in the `dialout` group:
+    
+    ```
+    groups
+    ```
+  
+  - Now get the device ID/Sensor ID:
+  
+  ```
+  rosrun urg_node getID /dev/ttyACM0 --
+  
+  ```
+  
+  - Now we'll write udev rules to give Hokuyo consistent device names:
+  
+    ```
+    cd /etc/udev/rules.d
+    ```
+    
+    - Create a following rule file:
+    
+    ```
+    sudo vim 80-youBot.rules
+    ```
+    
+    - Paste the following rule and save it:
+    
+    ```
+    SUBSYSTEMS=="usb", KERNEL=="ttyACM[0-9]*", ACTION=="add", ATTRS{idVendor}=="15d1", ATTRS{idProduct}=="0000", MODE="666",      PROGRAM="/opt/ros/melodic/lib/urg_node/getID /dev/%k q", SYMLINK+="sensors/hokuyo_%c", GROUP="dialout"
+    ``` 
+  ---
+  ToDo: mapping, localization, navigation
