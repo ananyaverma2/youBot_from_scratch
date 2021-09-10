@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+	<node pkg="joy" type="joy_node" name="joystick" output="screen"/>
+	<node pkg="teleop_twist_joy" type="teleop_node" name="teleop" output="screen">
+	<param name="enable_button" value="5"/>
+	</node>
+</launch>

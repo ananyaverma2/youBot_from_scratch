@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <!-- Launching urdf -->
+    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find youbot_description)/robots/youbot.urdf.xacro'" />    
+    <!-- Start TF publishers -->		  
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_base_state_publisher" output="screen" />
+</launch>
